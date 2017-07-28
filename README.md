@@ -43,7 +43,7 @@ INFO Action to images finished
 
 ```
 
-## Environment
+## Configuration
 
 - __GCD_DOCKER_HOST__: Set docker.sock location, by default is /var/run/docker.sock
 - __GCD_SWEEP_INTERVAL__: Set interval to sweep containers and images, by default is 1 second
