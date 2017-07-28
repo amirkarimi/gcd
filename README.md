@@ -2,6 +2,10 @@
 
 > WIP (Work In Progress)
 
+## Install
+
+### Pull project
+
 ## Roadmap
 
 - [x] Create logic core
