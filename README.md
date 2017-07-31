@@ -1,7 +1,5 @@
 # gcd
 
-> WIP (Work In Progress)
-
 ## Install
 
 ```bash

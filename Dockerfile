@@ -1,13 +1,5 @@
-FROM golang:1.8-alpine
+FROM alpine
 
-ENV PWD $GOPATH/src/github.com/stone-payments/gcd
-
-RUN mkdir -p $PWD
-
-WORKDIR $PWD
-
-ADD . ./
-
-RUN go install
+ADD ./tmp/build/* ./usr/bin
 
 CMD ["gcd"]
