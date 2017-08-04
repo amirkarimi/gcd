@@ -42,7 +42,8 @@ func (las LoggerAsService) OK(message ...interface{}) {
 }
 
 func (las LoggerAsService) Exit(message ...interface{}) {
-	text := []interface{}{las.exit("Exit")}
+	fmt.Println("")
+	text := []interface{}{las.exit("EXIT")}
 	text = append(text, message...)
 	fmt.Println(text...)
 	os.Exit(1)
