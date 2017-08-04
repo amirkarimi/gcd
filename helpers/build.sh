@@ -6,7 +6,7 @@ if which docker >/dev/null ; then
         -v $(pwd):$(pwd):Z \
         -w $(pwd) \
         -it \
-    golang:1.8-onbuild go build
+        golang:1.8-onbuild go build
     mv ./gcd ./tmp/build/
     docker build -t gcd .
     docker tag gcd guiferpa/gcd
