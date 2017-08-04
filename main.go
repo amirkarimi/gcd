@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/stone-payments/gcd/logger"
 	"github.com/stone-payments/gcd/worker"
 )
 
@@ -17,6 +18,11 @@ func main() {
 	host := os.Getenv("GCD_DOCKER_HOST")
 	if host == "" {
 		host = "unix:///var/run/docker.sock"
+	}
+
+	version := os.Getenv("GCD_DOCKER_API_VERSION")
+	if version == "" {
+		version = "1.24"
 	}
 
 	if intervalString := os.Getenv("GCD_SWEEP_INTERVAL"); intervalString != "" {
@@ -29,7 +35,9 @@ func main() {
 		}
 	}
 
-	worker, err := worker.New(host, "1.24")
+	logger := logger.New()
+
+	worker, err := worker.New(host, version, logger)
 	if err != nil {
 		panic(err)
 	}
@@ -38,11 +46,14 @@ func main() {
 
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 
+	logger.Info("Time:", time.Now().UnixNano())
+	logger.Info("State:", "running")
+	logger.Info("Docker API Version:", worker.GetVersion())
+
 	for {
 		select {
 		case <-sig:
-			fmt.Printf("\nDown daemon by signal: %v\n", <-sig)
-			os.Exit(0)
+			logger.Exit("Down daemon by signal:", <-sig)
 		case <-time.After(time.Second * time.Duration(interval)):
 			worker.Sweep()
 		}

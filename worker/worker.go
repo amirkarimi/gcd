@@ -33,6 +33,7 @@ type (
 		RemoveContainer(wg *sync.WaitGroup, container Container)
 		RemoveImage(wg *sync.WaitGroup, image Image)
 		Sweep()
+		GetVersion() string
 	}
 
 	WorkerAsClient struct {
@@ -78,6 +79,7 @@ func (wac WorkerAsClient) ListImages(ch chan []Image) {
 	resp, err := wac.conn.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
+		fmt.Println("", err.Error())
 		panic(err)
 	}
 
@@ -109,7 +111,7 @@ func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container Containe
 		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusNoContent {
-			wac.logger.Info("Container", container.Id, "removed successful")
+			wac.logger.OK("Container", container.Id, "removed successful")
 		}
 	}
 	wg.Done()
@@ -128,7 +130,7 @@ func (wac WorkerAsClient) RemoveImage(wg *sync.WaitGroup, image Image) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
-		wac.logger.Info("Image", image.Id, "removed successful")
+		wac.logger.OK("Image", image.Id, "removed successful")
 	}
 	wg.Done()
 }
@@ -198,7 +200,11 @@ func (wac WorkerAsClient) Sweep() {
 	}
 }
 
-func New(host, version string) (Worker, error) {
+func (wac WorkerAsClient) GetVersion() string {
+	return fmt.Sprintf("v%v", wac.version)
+}
+
+func New(host, version string, logger logger.Logger) (Worker, error) {
 	urlParsed, err := url.Parse(host)
 	if err != nil {
 		return nil, err
@@ -216,6 +222,6 @@ func New(host, version string) (Worker, error) {
 		conn,
 		host,
 		version,
-		logger.New(),
+		logger,
 	}, nil
 }
