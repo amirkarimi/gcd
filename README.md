@@ -11,7 +11,7 @@
 
 ### Short command
 ```bash
-> docker run -it --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
+> docker run --rm --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
 ```
 ### Running builded image
 ```bash
@@ -21,7 +21,7 @@ REPOSITORY          TAG                 IMAGE ID            CREATED             
 gdc                 latest              b5e360ce4d15        2 seconds ago       270 MB
 docker.io/golang    1.8-alpine          310e63753884        4 weeks ago         257 MB
 
-> docker run -it --name gcd -v /var/run/docker.sock:/var/run/docker.sock gcd
+> docker run --rm --name gcd -v /var/run/docker.sock:/var/run/docker.sock gcd
 
 INFO Time: 1501254532651998785
 INFO Host: unix:///var/run/docker.sock
