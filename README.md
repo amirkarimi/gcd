@@ -9,6 +9,11 @@
 
 ## To use
 
+### Short command
+```bash
+> docker run -it --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
+```
+### Running builded image
 ```bash
 > docker images
 
@@ -16,7 +21,7 @@ REPOSITORY          TAG                 IMAGE ID            CREATED             
 gdc                 latest              b5e360ce4d15        2 seconds ago       270 MB
 docker.io/golang    1.8-alpine          310e63753884        4 weeks ago         257 MB
 
-> docker run --rm -v /var/run/docker.sock:/var/run/docker.sock gcd
+> docker run -it --name gcd -v /var/run/docker.sock:/var/run/docker.sock gcd
 
 INFO Time: 1501254532651998785
 INFO Host: unix:///var/run/docker.sock
@@ -45,7 +50,7 @@ INFO Action to images finished
 
 ## Configuration
 
-- __GCD_DOCKER_HOST__: Set docker.sock location, by default is /var/run/docker.sock
+- __GCD_DOCKER_HOST__: Set __docker.sock__ location, by default is __var/run/docker.sock__
 - __GCD_SWEEP_INTERVAL__: Set interval to sweep containers and images, by default is 1 second
 
 ## Roadmap
