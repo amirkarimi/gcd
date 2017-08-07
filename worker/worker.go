@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,10 +38,12 @@ type (
 	}
 
 	WorkerAsClient struct {
-		conn    http.Client
-		host    string
-		version string
-		logger  logger.Logger
+		conn                   http.Client
+		host                   string
+		version                string
+		logger                 logger.Logger
+		removeImages           bool
+		removeContainersExited bool
 	}
 )
 
@@ -98,20 +101,25 @@ func (wac WorkerAsClient) ListImages(ch chan []Image) {
 }
 
 func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container Container) {
+	isNormalExited := strings.Contains(container.Status, "Exited (0)")
 	if container.State != "running" {
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("http://v%v/containers/%v", wac.version, container.Id), nil)
-		if err != nil {
-			panic(err)
-		}
+		if (isNormalExited && wac.removeContainersExited) || !isNormalExited {
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("http://v%v/containers/%v", wac.version, container.Id), nil)
+			if err != nil {
+				panic(err)
+			}
 
-		resp, err := wac.conn.Do(req)
-		if err != nil {
-			fmt.Sprintln(err.Error())
-		}
-		defer resp.Body.Close()
+			resp, err := wac.conn.Do(req)
+			if err != nil {
+				fmt.Sprintln(err.Error())
+			}
+			defer resp.Body.Close()
 
-		if resp.StatusCode == http.StatusNoContent {
-			wac.logger.OK("Container", container.Id, "removed successful")
+			if resp.StatusCode == http.StatusNoContent {
+				wac.logger.OK("Container", container.Id, "removed successful")
+			}
+		} else {
+			wac.logger.Skip("Container", container.Id, "skipped, Status:", container.Status)
 		}
 	}
 	wg.Done()
@@ -172,23 +180,27 @@ func (wac WorkerAsClient) Sweep() {
 				wac.logger.Error("Action to containers timeout occurred")
 			}
 
-			wgImageDone := make(chan bool)
-			var wgImage sync.WaitGroup
-			for _, image := range images {
-				wgImage.Add(1)
-				go wac.RemoveImage(&wgImage, image)
-			}
+			if wac.removeImages {
+				wgImageDone := make(chan bool)
+				var wgImage sync.WaitGroup
+				for _, image := range images {
+					wgImage.Add(1)
+					go wac.RemoveImage(&wgImage, image)
+				}
 
-			go func(done chan bool) {
-				wgImage.Wait()
-				done <- true
-			}(wgImageDone)
+				go func(done chan bool) {
+					wgImage.Wait()
+					done <- true
+				}(wgImageDone)
 
-			select {
-			case <-wgImageDone:
-				wac.logger.Info("Action to images finished")
-			case <-time.After(time.Second * 1):
-				wac.logger.Error("Action to images timeout occurred")
+				select {
+				case <-wgImageDone:
+					wac.logger.Info("Action to images finished")
+				case <-time.After(time.Second * 1):
+					wac.logger.Error("Action to images timeout occurred")
+				}
+			} else {
+				wac.logger.Info("Remove images:", wac.removeImages)
 			}
 
 		case <-time.After(time.Second * 1):
@@ -204,7 +216,7 @@ func (wac WorkerAsClient) GetVersion() string {
 	return fmt.Sprintf("v%v", wac.version)
 }
 
-func New(host, version string, logger logger.Logger) (Worker, error) {
+func New(host, version string, logger logger.Logger, removeImage, removeContainersPaused bool) (Worker, error) {
 	urlParsed, err := url.Parse(host)
 	if err != nil {
 		return nil, err
@@ -223,5 +235,7 @@ func New(host, version string, logger logger.Logger) (Worker, error) {
 		host,
 		version,
 		logger,
+		removeImage,
+		removeContainersPaused,
 	}, nil
 }

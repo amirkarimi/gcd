@@ -12,7 +12,8 @@ type (
 		Info(mesage ...interface{})
 		Error(message ...interface{})
 		OK(message ...interface{})
-		Exit(message ...interface{})
+		Exit(code int, message ...interface{})
+		Skip(message ...interface{})
 	}
 
 	LoggerAsService struct {
@@ -20,6 +21,7 @@ type (
 		err  func(a ...interface{}) string
 		ok   func(a ...interface{}) string
 		exit func(a ...interface{}) string
+		skip func(a ...interface{}) string
 	}
 )
 
@@ -41,12 +43,18 @@ func (las LoggerAsService) OK(message ...interface{}) {
 	fmt.Println(text...)
 }
 
-func (las LoggerAsService) Exit(message ...interface{}) {
+func (las LoggerAsService) Exit(code int, message ...interface{}) {
 	fmt.Println("")
 	text := []interface{}{las.exit("EXIT")}
 	text = append(text, message...)
 	fmt.Println(text...)
-	os.Exit(1)
+	os.Exit(code)
+}
+
+func (las LoggerAsService) Skip(message ...interface{}) {
+	text := []interface{}{las.skip("SKIP")}
+	text = append(text, message...)
+	fmt.Println(text...)
 }
 
 func New() Logger {
@@ -55,5 +63,6 @@ func New() Logger {
 		err:  color.New(color.FgRed).Add(color.Bold).SprintFunc(),
 		ok:   color.New(color.FgGreen).Add(color.Bold).SprintFunc(),
 		exit: color.New(color.FgWhite).Add(color.Bold).SprintFunc(),
+		skip: color.New(color.FgYellow).Add(color.Bold).SprintFunc(),
 	}
 }

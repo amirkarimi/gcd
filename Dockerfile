@@ -3,6 +3,8 @@ FROM alpine
 ENV GCD_DOCKER_HOST "/var/run/docker.sock"
 ENV GCD_SWEEP_INTERVAL "1"
 ENV GCD_DOCKER_API_VERSION "1.24"
+ENV GCD_REMOVE_IMAGES "true"
+ENV GCD_REMOVE_CONTAINERS_EXITED "false"
 
 ADD ./tmp/build/* ./usr/bin
 

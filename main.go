@@ -14,6 +14,8 @@ import (
 
 func main() {
 	interval := 1
+	removeImages := true
+	removeContainersExited := false // Enable remove to containers with exited status 0
 
 	host := os.Getenv("GCD_DOCKER_HOST")
 	if host == "" {
@@ -35,9 +37,27 @@ func main() {
 		}
 	}
 
+	if removeImagesString := os.Getenv("GCD_REMOVE_IMAGES"); removeImagesString != "" {
+		value, err := strconv.ParseBool(removeImagesString)
+		if err != nil {
+			fmt.Println("Invalid value as option for remove image:", err.Error())
+		} else {
+			removeImages = value
+		}
+	}
+
+	if removeContainersExitedString := os.Getenv("GCD_REMOVE_CONTAINERS_EXITED"); removeContainersExitedString != "" {
+		value, err := strconv.ParseBool(removeContainersExitedString)
+		if err != nil {
+			fmt.Println("Invalid value as option for remove containers paused:", err.Error())
+		} else {
+			removeContainersExited = value
+		}
+	}
+
 	logger := logger.New()
 
-	worker, err := worker.New(host, version, logger)
+	worker, err := worker.New(host, version, logger, removeImages, removeContainersExited)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +73,7 @@ func main() {
 	for {
 		select {
 		case <-sig:
-			logger.Exit("Down daemon by signal:", <-sig)
+			logger.Exit(0, "Down daemon by signal:", <-sig)
 		case <-time.After(time.Second * time.Duration(interval)):
 			worker.Sweep()
 		}
