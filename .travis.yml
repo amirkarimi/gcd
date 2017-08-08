@@ -2,6 +2,11 @@ laguage: go
 
 services:
   - docker
+  
+install:
+  - export GOPATH="${TRAVIS_BUILD_DIR}"
+  - export TRAVIS_BUILD_DIR="${GOPATH}/src"
+  - mkdir -p $TRAVIS_BUILD_DIR
 
 script:
   - make
