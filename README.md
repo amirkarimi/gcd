@@ -1,5 +1,7 @@
 # gcd
 
+[![Build Status](https://travis-ci.org/stone-payments/gcd.svg?branch=master)](https://travis-ci.org/stone-payments/gcd)
+
 ## Install
 
 ```bash
