@@ -2,7 +2,6 @@ all:
 	make test
 	make bench
 	make build
-	make push
 
 test:
 	@sh ./helpers/test.sh
@@ -15,6 +14,3 @@ cover:
 
 build:
 	@sh ./helpers/build.sh
-
-push:
-	@sh ./helpers/push.sh
