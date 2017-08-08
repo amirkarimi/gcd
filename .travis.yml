@@ -4,7 +4,7 @@ services:
   - docker
   
 before_install:
-  - mv $TRAVIS_BUILD_DIR/github.com/stone-payments/gcd $GOPATH/src/github.com/stone-payments/gcd
+  - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/stone-payments/gcd
   - cd $GOPATH/src/github.com/stone-payments/gcd
 
 script:
