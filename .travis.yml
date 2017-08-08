@@ -3,10 +3,7 @@ laguage: go
 services:
   - docker
   
-install:
-  - echo $TRAVIS_BUILD_DIR
-  - export TRAVIS_BUILD_DIR=~/Projects/stone-payments/gcd
-  - echo $TRAVIS_BUILD_DIR
+go_import_path: github.com/stone-payments/gcd
 
 script:
   - make
