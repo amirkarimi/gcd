@@ -14,7 +14,7 @@ install:
 
 script:
   - make
-  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken qTUqsbjUf1T3gN1ttS6xHmgHNMdxFr57
+  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
