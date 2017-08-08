@@ -7,5 +7,3 @@ do
   tail -n +2 coverage.out >> ./coverage-all.out
 done
 go tool cover -html=coverage-all.out
-# Remove report files
-rm -rf coverage-all.out coverage.out
