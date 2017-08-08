@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/stone-payments/gcd/clients/docker"
 	"github.com/stone-payments/gcd/logger"
 	"github.com/stone-payments/gcd/worker"
 )
@@ -57,10 +58,12 @@ func main() {
 
 	logger := logger.New()
 
-	worker, err := worker.New(host, version, logger, removeImages, removeContainersExited)
+	dockerClient, err := docker.NewClient(host, version)
 	if err != nil {
-		panic(err)
+		logger.Exit(1, err.Error())
 	}
+
+	w := worker.New(dockerClient, logger, removeImages, removeContainersExited)
 
 	sig := make(chan os.Signal, 1)
 
@@ -68,14 +71,14 @@ func main() {
 
 	logger.Info("Time:", time.Now().UnixNano())
 	logger.Info("State:", "running")
-	logger.Info("Docker API Version:", worker.GetVersion())
+	logger.Info("Docker API Version:", dockerClient.GetVersion())
 
 	for {
 		select {
 		case <-sig:
 			logger.Exit(0, "Down daemon by signal:", <-sig)
 		case <-time.After(time.Second * time.Duration(interval)):
-			worker.Sweep()
+			w.Sweep()
 		}
 	}
 }

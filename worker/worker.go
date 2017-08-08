@@ -1,122 +1,64 @@
 package worker
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net"
-	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/stone-payments/gcd/clients/docker"
 	"github.com/stone-payments/gcd/logger"
 )
 
 type (
-	Container struct {
-		Id      string
-		Created int
-		SizeRw  int
-		Status  string
-		State   string
-	}
-
-	Image struct {
-		Id string
-	}
-
 	Worker interface {
-		ListContainers(ch chan []Container)
-		ListImages(ch chan []Image)
-		RemoveContainer(wg *sync.WaitGroup, container Container)
-		RemoveImage(wg *sync.WaitGroup, image Image)
+		ListContainers(ch chan []docker.Container)
+		ListImages(ch chan []docker.Image)
+		RemoveContainer(wg *sync.WaitGroup, container docker.Container)
+		RemoveImage(wg *sync.WaitGroup, image docker.Image)
 		Sweep()
 		GetVersion() string
 	}
 
 	WorkerAsClient struct {
-		conn                   http.Client
-		host                   string
-		version                string
+		dockerClient           docker.Client
 		logger                 logger.Logger
 		removeImages           bool
 		removeContainersExited bool
 	}
 )
 
-func (wac WorkerAsClient) ListContainers(ch chan []Container) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://v%v/containers/json?all=1", wac.version), nil)
+func (wac WorkerAsClient) ListContainers(ch chan []docker.Container) {
+	containers, err := wac.dockerClient.GetContainers()
 	if err != nil {
-		panic(err)
-	}
-
-	resp, err := wac.conn.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	containers := make([]Container, 0)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := json.Unmarshal(body, &containers); err != nil {
-		panic(err)
+		wac.logger.Error(err.Error())
 	}
 
 	ch <- containers
 }
 
-func (wac WorkerAsClient) ListImages(ch chan []Image) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://v%v/images/json?all=1", wac.version), nil)
+func (wac WorkerAsClient) ListImages(ch chan []docker.Image) {
+	images, err := wac.dockerClient.GetImages()
 	if err != nil {
-		panic(err)
-	}
-
-	resp, err := wac.conn.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		fmt.Println("", err.Error())
-		panic(err)
-	}
-
-	images := make([]Image, 0)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := json.Unmarshal(body, &images); err != nil {
-		panic(err)
+		wac.logger.Error(err.Error())
 	}
 
 	ch <- images
 }
 
-func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container Container) {
+func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container docker.Container) {
 	isNormalExited := strings.Contains(container.Status, "Exited (0)")
 	if container.State != "running" {
 		if (isNormalExited && wac.removeContainersExited) || !isNormalExited {
-			req, err := http.NewRequest("DELETE", fmt.Sprintf("http://v%v/containers/%v", wac.version, container.Id), nil)
+			ok, err := wac.dockerClient.RemoveContainer(container.Id)
 			if err != nil {
-				panic(err)
-			}
-
-			resp, err := wac.conn.Do(req)
-			if err != nil {
-				fmt.Sprintln(err.Error())
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode == http.StatusNoContent {
-				wac.logger.OK("Container", container.Id, "removed successful")
+				wac.logger.Error(err.Error())
+			} else {
+				if ok {
+					wac.logger.OK("Container", container.Id, "removed successful")
+				} else {
+					wac.logger.Skip("Container", container.Id, "failure when removed")
+				}
 			}
 		} else {
 			wac.logger.Skip("Container", container.Id, "skipped, Status:", container.Status)
@@ -125,19 +67,10 @@ func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container Containe
 	wg.Done()
 }
 
-func (wac WorkerAsClient) RemoveImage(wg *sync.WaitGroup, image Image) {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("http://v%v/images/%v?force=true", wac.version, image.Id), nil)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := wac.conn.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
+func (wac WorkerAsClient) RemoveImage(wg *sync.WaitGroup, image docker.Image) {
+	if err := wac.dockerClient.RemoveImage(image.Id); err != nil {
+		wac.logger.Error(err.Error())
+	} else {
 		wac.logger.OK("Image", image.Id, "removed successful")
 	}
 	wg.Done()
@@ -146,8 +79,8 @@ func (wac WorkerAsClient) RemoveImage(wg *sync.WaitGroup, image Image) {
 func (wac WorkerAsClient) Sweep() {
 	fmt.Println("")
 
-	chContainers := make(chan []Container)
-	chImages := make(chan []Image)
+	chContainers := make(chan []docker.Container)
+	chImages := make(chan []docker.Image)
 
 	go wac.ListContainers(chContainers)
 	go wac.ListImages(chImages)
@@ -155,7 +88,7 @@ func (wac WorkerAsClient) Sweep() {
 	select {
 	case containers := <-chContainers:
 		wac.logger.Info("Time:", time.Now().UnixNano())
-		wac.logger.Info("Host:", wac.host)
+		wac.logger.Info("Host:", wac.dockerClient.GetHost())
 		wac.logger.Info("Containers total:", len(containers))
 		select {
 		case images := <-chImages:
@@ -213,29 +146,14 @@ func (wac WorkerAsClient) Sweep() {
 }
 
 func (wac WorkerAsClient) GetVersion() string {
-	return fmt.Sprintf("v%v", wac.version)
+	return wac.dockerClient.GetVersion()
 }
 
-func New(host, version string, logger logger.Logger, removeImage, removeContainersPaused bool) (Worker, error) {
-	urlParsed, err := url.Parse(host)
-	if err != nil {
-		return nil, err
-	}
-
-	conn := http.Client{
-		Transport: &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", urlParsed.Path)
-			},
-		},
-	}
-
+func New(dockerClient docker.Client, logger logger.Logger, removeImage, removeContainersPaused bool) Worker {
 	return WorkerAsClient{
-		conn,
-		host,
-		version,
+		dockerClient,
 		logger,
 		removeImage,
 		removeContainersPaused,
-	}, nil
+	}
 }
