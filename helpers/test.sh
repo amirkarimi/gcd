@@ -1,1 +1,1 @@
-go test $(go list ./... | grep -v /vendor/)
+go test -v -cover $(go list ./... | grep -v /vendor/)
