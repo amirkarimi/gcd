@@ -47,8 +47,10 @@ INFO Action to images finished
 
 ## Configuration
 
-- __GCD_DOCKER_HOST__: Set __docker.sock__ location, by default is __/var/run/docker.sock__
-- __GCD_SWEEP_INTERVAL__: Set interval to sweep containers and images, by default is 1 second
+- __GCD_DOCKER_HOST:__ Set your path for docker.sock, by default use `/var/run/docker.sock:/var/run/docker.sock`
+- __GCD_SWEEP_INTERVAL:__ Set your interval to sweep, by default use 1 second
+- __GCD_REMOVE_IMAGES__: Set `true` or `false` to remove images, by default use `true`
+- __GCD_REMOVE_CONTAINERS_EXITED__: Remove containers with exited code equal 0, by default use `false`
 
 ## Roadmap
 
