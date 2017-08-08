@@ -7,6 +7,7 @@ before_install:
   - mkdir -p $GOPATH/src/github.com/stone-payments/gcd
   - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/stone-payments/gcd
   - cd $GOPATH/src/github.com/stone-payments/gcd
+  - ls
 
 script:
   - make
