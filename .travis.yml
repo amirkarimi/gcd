@@ -3,7 +3,9 @@ laguage: go
 services:
   - docker
   
-go_import_path: github.com/stone-payments/gcd
+before_install:
+  - mv $TRAVIS_BUILD_DIR/github.com/stone-payments/gcd $GOPATH/src/github.com/stone-payments/gcd
+  - cd $GOPATH/src/github.com/stone-payments/gcd
 
 script:
   - make
