@@ -4,9 +4,9 @@ services:
   - docker
   
 install:
-  - export GOPATH="${TRAVIS_BUILD_DIR}"
-  - export TRAVIS_BUILD_DIR="${GOPATH}/src"
-  - mkdir -p $TRAVIS_BUILD_DIR
+  - echo $TRAVIS_BUILD_DIR
+  - export TRAVIS_BUILD_DIR=~/Projects/stone-payments/gcd
+  - echo $TRAVIS_BUILD_DIR
 
 script:
   - make
