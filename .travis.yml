@@ -14,7 +14,7 @@ install:
 
 script:
   - make
-  - $GOPATH/bin/goveralls -coverprofile=$GOPATH/src/stone-payments/gcd/coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+  - $GOPATH/bin/goveralls -coverprofile=$GOPATH/src/stone-payments/gcd/coverage-all.out -service travis-ci -repotoken $COVERALLS_TOKEN
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
