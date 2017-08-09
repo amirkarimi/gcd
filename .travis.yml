@@ -11,6 +11,7 @@ before_install:
 script:
   - make && ls
   - ls
+  - cat coverage-all.out
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
