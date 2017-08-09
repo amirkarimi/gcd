@@ -1,6 +1,7 @@
 all:
 	make test
 	make bench
+	make cover
 	make build
 
 test:

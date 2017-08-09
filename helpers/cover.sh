@@ -1,4 +1,5 @@
 #!/bin/sh
+rm -rf *.out
 PACKAGES=$(go list ./... | grep -v /vendor/)
 echo "mode: count" > coverage-all.out
 for pkg in $PACKAGES

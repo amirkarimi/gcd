@@ -47,8 +47,8 @@ func (wac WorkerAsClient) ListImages(ch chan []docker.Image) {
 }
 
 func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container docker.Container) {
-	isNormalExited := strings.Contains(container.Status, "Exited (0)")
 	if container.State != "running" {
+		isNormalExited := strings.Contains(container.Status, "Exited (0)")
 		if (isNormalExited && wac.removeContainersExited) || !isNormalExited {
 			ok, err := wac.dockerClient.RemoveContainer(container.Id)
 			if err != nil {
