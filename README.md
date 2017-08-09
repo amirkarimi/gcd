@@ -64,6 +64,6 @@ INFO Action to images finished
 
 - [x] Create logic core
 - [x] Create Dockerfile
-- [ ] Create tests
+- [x] Create tests (_work in progress_)
 - [x] Create _How to use_
-- [ ] Create benchmark
+- [x] Create benchmark (_work in progress_)
