@@ -36,19 +36,19 @@ INFO Docker API Version: v1.24
 INFO Time: 1501884319082624665
 INFO Host: /var/run/docker.sock
 INFO Containers total: 1
-INFO Images total: 8
-SKIP Container ab3410b5fdf3ad4e83ab25cf09d220c42ca12f73e54332a2974886d9c3b47cda skipped, Status: Exited (0) 32 seconds ago
+INFO Images total: 2
 INFO Action to containers finished
 OK Image sha256:cb768d4c340233275d8dab6160de29c849b5b5dea63bce09a1c683205a75d855 removed successful
 OK Image sha256:5d82e356477f55c857e52b672d244e4d72f065c81cdd5010efdad6eb26ea5088 removed successful
 INFO Action to images finished
 
-INFO Time: 1501884320449422524
-INFO Host: /var/run/docker.sock
+INFO Time: 1502305011634686589
+INFO Host: unix:///var/run/docker.sock
 INFO Containers total: 1
-INFO Images total: 6
-SKIP Container ab3410b5fdf3ad4e83ab25cf09d220c42ca12f73e54332a2974886d9c3b47cda skipped, Status: Exited (0) 32 seconds ago
+INFO Images total: 1
+SKIP Container 885c3d698d3edf5c2dc7fb21e94f223bd3c28166b2a39f19867e2a3920675246 skipped, Status: Exited (0) 15 minutes ago
 INFO Action to containers finished
+SKIP Image sha256:b39de1d79a536613ed278b5a4d500bcdefa74ecdcecc3a8d655271c3d5bf813f
 INFO Action to images finished
 
 ```
