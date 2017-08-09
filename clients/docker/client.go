@@ -27,7 +27,7 @@ type (
 		GetContainers() ([]Container, error)
 		GetImages() ([]Image, error)
 		RemoveContainer(id string) (bool, error)
-		RemoveImage(id string) error
+		RemoveImage(id string) (bool, error)
 		GetVersion() string
 		GetHost() string
 	}
@@ -110,19 +110,23 @@ func (dac DockerAsClient) RemoveContainer(id string) (bool, error) {
 	return false, nil
 }
 
-func (dac DockerAsClient) RemoveImage(id string) error {
+func (dac DockerAsClient) RemoveImage(id string) (bool, error) {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("http://v%v/images/%v?force=true", dac.version, id), nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	resp, err := dac.conn.Do(req)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer resp.Body.Close()
 
-	return nil
+	if resp.StatusCode != http.StatusOK {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (dac DockerAsClient) GetVersion() string {

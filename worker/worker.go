@@ -57,7 +57,7 @@ func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container docker.C
 				if ok {
 					wac.logger.OK("Container", container.Id, "removed successful")
 				} else {
-					wac.logger.Skip("Container", container.Id, "failure when removed")
+					wac.logger.Skip("Container", container.Id)
 				}
 			}
 		} else {
@@ -68,10 +68,14 @@ func (wac WorkerAsClient) RemoveContainer(wg *sync.WaitGroup, container docker.C
 }
 
 func (wac WorkerAsClient) RemoveImage(wg *sync.WaitGroup, image docker.Image) {
-	if err := wac.dockerClient.RemoveImage(image.Id); err != nil {
+	if ok, err := wac.dockerClient.RemoveImage(image.Id); err != nil {
 		wac.logger.Error(err.Error())
 	} else {
-		wac.logger.OK("Image", image.Id, "removed successful")
+		if ok {
+			wac.logger.OK("Image", image.Id, "removed successful")
+		} else {
+			wac.logger.Skip("Image", image.Id)
+		}
 	}
 	wg.Done()
 }

@@ -8,7 +8,7 @@ type Client struct {
 	FakeGetContainers   func() ([]docker.Container, error)
 	FakeGetImages       func() ([]docker.Image, error)
 	FakeRemoveContainer func(id string) (bool, error)
-	FakeRemoveImage     func(id string) error
+	FakeRemoveImage     func(id string) (bool, error)
 	FakeGetVersion      func() string
 	FakeGetHost         func() string
 }
@@ -34,11 +34,11 @@ func (c Client) RemoveContainer(id string) (bool, error) {
 	return false, nil
 }
 
-func (c Client) RemoveImage(id string) error {
+func (c Client) RemoveImage(id string) (bool, error) {
 	if c.FakeRemoveImage != nil {
 		return c.FakeRemoveImage(id)
 	}
-	return nil
+	return false, nil
 }
 
 func (c Client) GetVersion() string {

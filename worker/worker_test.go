@@ -180,27 +180,32 @@ func BenchmarkListImages(b *testing.B) {
 
 func TestRemoveImage(t *testing.T) {
 
+	FakeRemoveImage := func(id string) (bool, error) {
+		if id == "fake-image-id0" {
+			return false, nil
+		} else {
+			if id == "fake-image-id1" {
+				return true, nil
+			}
+			return false, errors.New("Fake error")
+		}
+	}
+
 	cases := []struct {
 		Image           docker.Image
-		FakeRemoveImage func(id string) error
+		FakeRemoveImage func(id string) (bool, error)
 	}{
 		{
-			Image: docker.Image{Id: "fake-image-id0"},
-			FakeRemoveImage: func(id string) error {
-				if id == "fake-image-id0" {
-					return nil
-				}
-				return errors.New("Fake error")
-			},
+			Image:           docker.Image{Id: "fake-image-id-1"},
+			FakeRemoveImage: FakeRemoveImage,
 		},
 		{
-			Image: docker.Image{Id: "fake-image-id1"},
-			FakeRemoveImage: func(id string) error {
-				if id == "fake-image-id0" {
-					return nil
-				}
-				return errors.New("Fake error")
-			},
+			Image:           docker.Image{Id: "fake-image-id0"},
+			FakeRemoveImage: FakeRemoveImage,
+		},
+		{
+			Image:           docker.Image{Id: "fake-image-id1"},
+			FakeRemoveImage: FakeRemoveImage,
 		},
 	}
 
