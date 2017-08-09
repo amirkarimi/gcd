@@ -7,11 +7,13 @@ before_install:
   - mkdir -p $GOPATH/src/github.com/stone-payments/gcd
   - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/stone-payments
   - cd $GOPATH/src/github.com/stone-payments/gcd
+  
+install:
+  - go get github.com/mattn/goveralls
 
 script:
-  - make && ls
-  - ls
-  - cat coverage-all.out
+  - make
+  - $GOPATH/bin/goveralls -coverprofile=coverage-all.out -service travis-ci -repotoken qTUqsbjUf1T3gN1ttS6xHmgHNMdxFr57E
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
