@@ -9,7 +9,8 @@ before_install:
   - cd $GOPATH/src/github.com/stone-payments/gcd
 
 script:
-  - make
+  - make && ls
+  - ls
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
