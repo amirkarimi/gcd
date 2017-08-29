@@ -1,3 +1,13 @@
+FROM golang:1.8 as tester
+
+ENV WD /go/src/github.com/stone-payments/gcd
+
+COPY . $WD
+
+WORKDIR $WD
+
+RUN make test
+
 FROM golang:1.8 as builder
 
 ENV WD /go/src/github.com/stone-payments/gcd
@@ -6,7 +16,7 @@ COPY . $WD
 
 WORKDIR $WD
 
-RUN CGO_ENABLED=0 go build
+RUN GOOS=linux CGO_ENABLED=0 go build
 
 FROM alpine
 
