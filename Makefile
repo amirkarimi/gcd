@@ -1,8 +1,8 @@
 all:
-	make test
-	make bench
-	make cover
-	make build
+	@make test
+	@make bench
+	@make cover
+	@make build
 
 docker:
 	@make docker-build
