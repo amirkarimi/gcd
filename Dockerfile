@@ -1,14 +1,4 @@
-FROM golang:1.8 AS tester
-
-ENV WD /go/src/github.com/stone-payments/gcd
-
-COPY . $WD
-
-WORKDIR $WD
-
-RUN make test
-
-FROM golang:1.8 as builder
+FROM golang:1.8-onbuild as builder
 
 ENV WD /go/src/github.com/stone-payments/gcd
 
@@ -24,10 +14,12 @@ ENV WD /go/src/github.com/stone-payments/gcd
 
 COPY --from=builder $WD/gcd .
 
-ENV GCD_DOCKER_HOST "/var/run/docker.sock"
+ENV GCD_DOCKER_HOST "tcp:///var/run/docker.sock"
 ENV GCD_SWEEP_INTERVAL "1"
-ENV GCD_DOCKER_API_VERSION "1.24"
-ENV GCD_REMOVE_IMAGES "true"
-ENV GCD_REMOVE_CONTAINERS_EXITED "true"
+ENV GCD_REMOVE_IMAGES "false"
+ENV GCD_REMOVE_HEALTHY_CONTAINERS_EXITED "true"
 
-CMD ["./gcd"]
+CMD ./gcd -target=$GCD_DOCKER_HOST \ 
+          -sweep-interval=$GCD_SWEEP_INTERVAL \
+          -remove-images=$GCD_REMOVE_IMAGES \
+          -remove-healthy-container=$GCD_REMOVE_HEALTHY_CONTAINERS_EXITED

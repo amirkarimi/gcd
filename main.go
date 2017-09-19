@@ -1,84 +1,98 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/stone-payments/gcd/clients/docker"
-	"github.com/stone-payments/gcd/logger"
-	"github.com/stone-payments/gcd/worker"
+	docker "github.com/fsouza/go-dockerclient"
+	"github.com/sirupsen/logrus"
 )
 
+var (
+	target                 string
+	sweepInterval          int
+	removeImages           bool
+	removeHealthyContainer bool
+)
+
+func init() {
+	flag.StringVar(&target, "target", "unix:///var/run/docker.sock", "-target=unix:///var/run/docker.sock")
+	flag.IntVar(&sweepInterval, "sweep-interval", 1, "-sweep-interval=1")
+	flag.BoolVar(&removeImages, "remove-images", true, "-remove-images=true")
+	flag.BoolVar(&removeHealthyContainer, "remove-healthy-container", true, "-remove-healthy-container=true")
+}
+
 func main() {
-	interval := 1
-	removeImages := true
-	removeContainersExited := false // Enable remove to containers with exited status 0
+	flag.Parse()
 
-	host := os.Getenv("GCD_DOCKER_HOST")
-	if host == "" {
-		host = "unix:///var/run/docker.sock"
-	}
-
-	version := os.Getenv("GCD_DOCKER_API_VERSION")
-	if version == "" {
-		version = "1.24"
-	}
-
-	if intervalString := os.Getenv("GCD_SWEEP_INTERVAL"); intervalString != "" {
-		value, err := strconv.Atoi(intervalString)
-		if err != nil {
-			fmt.Println("Invalid value as interval:", err.Error())
-			interval = 1
-		} else {
-			interval = value
-		}
-	}
-
-	if removeImagesString := os.Getenv("GCD_REMOVE_IMAGES"); removeImagesString != "" {
-		value, err := strconv.ParseBool(removeImagesString)
-		if err != nil {
-			fmt.Println("Invalid value as option for remove image:", err.Error())
-		} else {
-			removeImages = value
-		}
-	}
-
-	if removeContainersExitedString := os.Getenv("GCD_REMOVE_CONTAINERS_EXITED"); removeContainersExitedString != "" {
-		value, err := strconv.ParseBool(removeContainersExitedString)
-		if err != nil {
-			fmt.Println("Invalid value as option for remove containers paused:", err.Error())
-		} else {
-			removeContainersExited = value
-		}
-	}
-
-	logger := logger.New()
-
-	dockerClient, err := docker.NewClient(host, version)
+	dc, err := docker.NewClient(target)
 	if err != nil {
-		logger.Exit(1, err.Error())
+		panic(err)
 	}
 
-	w := worker.New(dockerClient, logger, removeImages, removeContainersExited)
+	logger := logrus.New()
+	logger.Out = os.Stdout
 
-	sig := make(chan os.Signal, 1)
+	s := make(chan os.Signal, 1)
 
-	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(s, syscall.SIGTERM, syscall.SIGINT)
 
-	logger.Info("Time:", time.Now().UnixNano())
-	logger.Info("State:", "running")
-	logger.Info("Docker API Version:", dockerClient.GetVersion())
+	logger.Infof("Target: %v", target)
+	logger.Infof("Sweep Interval: %vs", sweepInterval)
+	logger.Infof("Remove Images: %v", removeImages)
+	logger.Infof("Remove Healthy Containers: %v", removeHealthyContainer)
 
 	for {
 		select {
-		case <-sig:
-			logger.Exit(0, "Down daemon by signal:", <-sig)
-		case <-time.After(time.Second * time.Duration(interval)):
-			w.Sweep()
+		case <-s:
+			logger.Fatalf("Down worker by signal: %v", <-s)
+		case <-time.Tick(time.Duration(sweepInterval) * time.Second):
+			logger.Infof("Time: %v", time.Now().UnixNano())
+			containers, err := dc.ListContainers(docker.ListContainersOptions{
+				All: true,
+			})
+			if err != nil {
+				logger.Error(err)
+			}
+			for _, container := range containers {
+				exitCodeFromContainer := "(-)"
+				if splitedStatus := strings.Split(container.Status, " "); len(splitedStatus) > 1 {
+					exitCodeFromContainer = splitedStatus[1]
+				}
+				if removeHealthyContainer && exitCodeFromContainer == "(0)" && container.State == "exited" {
+					err := dc.RemoveContainer(docker.RemoveContainerOptions{
+						ID:            container.ID,
+						RemoveVolumes: true,
+						Force:         true,
+					})
+					if err != nil {
+						logger.Errorf("[Remove Container]: %v", err)
+					} else {
+						logger.Infof("[Remove Container]: %v", container.ID)
+					}
+				}
+			}
+
+			if removeImages {
+				images, err := dc.ListImages(docker.ListImagesOptions{})
+				if err != nil {
+					logger.Error(err)
+				}
+				for _, image := range images {
+					err := dc.RemoveImage(image.ID)
+					if err != nil {
+						logger.Errorf("[Remove Image]: %v", err)
+					} else {
+						logger.Infof("[Remove Image]: %v", image.ID)
+					}
+				}
+			}
 		}
+		fmt.Println()
 	}
 }
