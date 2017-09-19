@@ -1,27 +1,28 @@
-all:
-	@make test
-	@make bench
-	@make cover
-	@make build
+PROJECT := gcd
+BIN_DIR := $(GOPATH)/bin
+RELEASE_DIR := ./release
 
-docker:
-	@make docker-build
-	@make docker-up
+VERSION ?= v0.0.1
+PLATFORM ?= linux
+ARCH ?= amd64
+RELEASE_PATH := $(RELEASE_DIR)/$(PROJECT)
 
-test:
-	@sh ./helpers/test.sh
+PATH_MAIN_PACKAGE := ./
+PKGS := $(shell go list ./... | grep -v /vendor)
 
-bench:
-	@sh ./helpers/bench.sh
+.PHONY: test lint build clear
 
-cover: 
-	@sh ./helpers/cover.sh
+build: clear $(RELEASE_PATH)
 
-build:
-	@sh ./helpers/build.sh
+build-docker:
+	@echo "---> Building the project using Dockerfile"
+	@docker build -t $(PROJECT):$(VERSION) .
 
-docker-build:
-	docker build -t gcd .
+clear:
+	@echo "---> Cleaning up directory"
+	@rm -rf $(RELEASE_DIR)
 
-docker-up:
-	docker run -v $$DOCKER_SOCK:/var/run/docker.sock gcd
+$(RELEASE_PATH):
+	@echo "---> Building the project"
+	@mkdir -p $(RELEASE_DIR)
+	@CGO_ENABLED=0 GOOS=$(PLATFORM) GOARCH=$(ARCH) go build -o $(RELEASE_PATH) $(PATH_MAIN_PACKAGE)
