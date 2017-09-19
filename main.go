@@ -15,14 +15,14 @@ import (
 
 var (
 	target                 string
-	interval               int
+	sweepInterval          int
 	removeImages           bool
 	removeHealthyContainer bool
 )
 
 func init() {
-	flag.StringVar(&target, "target", "unix:///var/run/docker.sock", "-target=/var/run/docker.sock")
-	flag.IntVar(&interval, "interval", 1, "-interval=1")
+	flag.StringVar(&target, "target", "unix:///var/run/docker.sock", "-target=unix:///var/run/docker.sock")
+	flag.IntVar(&sweepInterval, "sweep-interval", 1, "-sweep-interval=1")
 	flag.BoolVar(&removeImages, "remove-images", true, "-remove-images=true")
 	flag.BoolVar(&removeHealthyContainer, "remove-healthy-container", true, "-remove-healthy-container=true")
 }
@@ -42,11 +42,16 @@ func main() {
 
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGINT)
 
+	logger.Infof("Target: %v", target)
+	logger.Infof("Sweep Interval: %vs", sweepInterval)
+	logger.Infof("Remove Images: %v", removeImages)
+	logger.Infof("Remove Healthy Containers: %v", removeHealthyContainer)
+
 	for {
 		select {
 		case <-s:
 			logger.Fatalf("Down worker by signal: %v", <-s)
-		case <-time.Tick(time.Duration(interval) * time.Second):
+		case <-time.Tick(time.Duration(sweepInterval) * time.Second):
 			logger.Infof("Time: %v", time.Now().UnixNano())
 			containers, err := dc.ListContainers(docker.ListContainersOptions{
 				All: true,
@@ -86,8 +91,6 @@ func main() {
 						logger.Infof("[Remove Image]: %v", image.ID)
 					}
 				}
-			} else {
-				logger.Infof("[Remove Images]: %v", removeImages)
 			}
 		}
 		fmt.Println()
