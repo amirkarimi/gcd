@@ -16,7 +16,7 @@ build: clear $(RELEASE_PATH)
 
 build-docker:
 	@echo "---> Building the project using Dockerfile"
-	@docker build -t $(PROJECT):$(VERSION) .
+	@docker build -t docker.io/guiferpa/$(PROJECT):$(VERSION) .
 
 clear:
 	@echo "---> Cleaning up directory"
