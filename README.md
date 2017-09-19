@@ -1,7 +1,6 @@
 # gcd
 
 [![Build Status](https://travis-ci.org/stone-payments/gcd.svg?branch=master)](https://travis-ci.org/stone-payments/gcd)
-[![Coverage Status](https://coveralls.io/repos/github/stone-payments/gcd/badge.svg?branch=master)](https://coveralls.io/github/stone-payments/gcd?branch=master)
 
 ## Install
 
