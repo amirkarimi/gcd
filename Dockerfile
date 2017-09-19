@@ -1,5 +1,7 @@
 FROM golang:1.8-onbuild as builder
 
+MAINTAINER Guilherme Paixão <gpaixao@stone.com.br>
+
 ENV WD /go/src/github.com/stone-payments/gcd
 
 COPY . $WD
