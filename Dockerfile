@@ -17,7 +17,7 @@ ENV WD /go/src/github.com/stone-payments/gcd
 COPY --from=builder $WD/gcd .
 
 ENV GCD_DOCKER_HOST "unix:///var/run/docker.sock"
-ENV GCD_SWEEP_INTERVAL "1"
+ENV GCD_SWEEP_INTERVAL "60"
 ENV GCD_REMOVE_IMAGES "false"
 ENV GCD_REMOVE_HEALTHY_CONTAINERS_EXITED "true"
 

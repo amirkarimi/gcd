@@ -1,6 +1,6 @@
 PROJECT := gcd
 BIN_DIR := $(GOPATH)/bin
-RELEASE_DIR := ./release
+RELEASE_DIR := ./bin
 
 VERSION ?= v0.0.1
 PLATFORM ?= linux
@@ -14,7 +14,7 @@ PKGS := $(shell go list ./... | grep -v /vendor)
 
 build: clear $(RELEASE_PATH)
 
-build-docker:
+build-image:
 	@echo "---> Building the project using Dockerfile"
 	@docker build -t guiferpa/$(PROJECT):$(VERSION) .
 

@@ -11,10 +11,22 @@
 
 ## To use
 
-### Short command
+### Running builded binary
+```bash
+> ./bin/gcd
+```
+
+### Use docker image with short command
 ```bash
 > docker run --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
 ```
+
+### Building docker image
+```bash
+> make build-image
+```
+> :warning: This project use multi-stage build to build docker image, required use >=17.05 docker version
+
 ### Running builded image
 ```bash
 > docker images
@@ -24,7 +36,7 @@ guiferpa/gcd             latest              04ba50851638        16 seconds ago 
 docker.io/golang         1.8-onbuild         5d82e356477f        2 weeks ago         699 MB
 docker.io/alpine         latest              7328f6f8b418        6 weeks ago         3.97 MB
 
-> docker run --name gcd -v /var/run/docker.sock:/var/run/docker.sock gcd
+> docker run --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
 ```
 
 ## Flags
