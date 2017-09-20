@@ -72,9 +72,9 @@ func main() {
 							Force:         true,
 						})
 						if err != nil {
-							logger.Errorf("[Remove Container]: %v", err)
+							logger.Errorf("[Remove Container]: Error:%v", err)
 						} else {
-							logger.Infof("[Remove Container]: %v", container.ID)
+							logger.Infof("[Remove Container]: ID:%v, Labels:%v", container.ID, container.Labels)
 						}
 					}
 				}
@@ -88,9 +88,9 @@ func main() {
 				for _, image := range images {
 					err := dc.RemoveImage(image.ID)
 					if err != nil {
-						logger.Errorf("[Remove Image]: %v", err)
+						logger.Errorf("[Remove Image]: Error:%v", err)
 					} else {
-						logger.Infof("[Remove Image]: %v", image.ID)
+						logger.Infof("[Remove Image]: ID:%v, Labels", image.ID, image.Labels)
 					}
 				}
 			}
