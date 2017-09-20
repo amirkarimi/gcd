@@ -1,4 +1,4 @@
-FROM golang:1.8-onbuild as builder
+FROM golang:1.8-onbuild AS builder
 
 MAINTAINER Guilherme Paixão <gpaixao@stone.com.br>
 
