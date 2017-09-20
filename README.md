@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-> git pull https://github.com/stone-payments/gcd.git
+> git clone https://github.com/stone-payments/gcd.git
 > make build
 ```
 
