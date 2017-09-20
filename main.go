@@ -22,7 +22,7 @@ var (
 
 func init() {
 	flag.StringVar(&target, "target", "unix:///var/run/docker.sock", "-target=unix:///var/run/docker.sock")
-	flag.IntVar(&sweepInterval, "sweep-interval", 1, "-sweep-interval=1")
+	flag.IntVar(&sweepInterval, "sweep-interval", 60, "-sweep-interval=60")
 	flag.BoolVar(&removeImages, "remove-images", true, "-remove-images=true")
 	flag.BoolVar(&removeHealthyContainer, "remove-healthy-container", true, "-remove-healthy-container=true")
 }
@@ -64,16 +64,18 @@ func main() {
 				if splitedStatus := strings.Split(container.Status, " "); len(splitedStatus) > 1 {
 					exitCodeFromContainer = splitedStatus[1]
 				}
-				if removeHealthyContainer && exitCodeFromContainer == "(0)" && container.State == "exited" {
-					err := dc.RemoveContainer(docker.RemoveContainerOptions{
-						ID:            container.ID,
-						RemoveVolumes: true,
-						Force:         true,
-					})
-					if err != nil {
-						logger.Errorf("[Remove Container]: %v", err)
-					} else {
-						logger.Infof("[Remove Container]: %v", container.ID)
+				if container.State != "running" {
+					if (removeHealthyContainer && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
+						err := dc.RemoveContainer(docker.RemoveContainerOptions{
+							ID:            container.ID,
+							RemoveVolumes: true,
+							Force:         true,
+						})
+						if err != nil {
+							logger.Errorf("[Remove Container]: %v", err)
+						} else {
+							logger.Infof("[Remove Container]: %v", container.ID)
+						}
 					}
 				}
 			}
