@@ -45,13 +45,13 @@ docker.io/alpine         latest              7328f6f8b418        6 weeks ago    
 ## Flags
 
 - __-target__ Set docker host target
-- __-sweep-interval__ Set interval between sweep
+- __-sweep-interval__ Set interval between sweep, this parameter only measures in second
 - __-remove-images__ Set enable to remove images that isn't any container dependencies
 - __-remove-healthy-container__ Set enable to remove healthy container
 
 ## Docker environment configuration
 
-- __GCD_DOCKER_HOST:__ Set your path for docker.sock, by default use `/var/run/docker.sock:/var/run/docker.sock`
-- __GCD_SWEEP_INTERVAL:__ Set your interval to sweep, by default use 1 second
-- __GCD_REMOVE_IMAGES__: Set `true` or `false` to remove images, by default use `true`
-- __GCD_REMOVE_HEALTHY_CONTAINERS_EXITED__: Remove containers with exited code equal 0, by default use `false`
+- __GCD_DOCKER_HOST:__ A env variable to set __-target__, by default use `/var/run/docker.sock:/var/run/docker.sock`
+- __GCD_SWEEP_INTERVAL:__ A env variable to set __-sweep-interval__, by default use 60 seconds
+- __GCD_REMOVE_IMAGES__: A env variable to set __-remove-images__, by default use `true`
+- __GCD_REMOVE_HEALTHY_CONTAINERS_EXITED__: A env variable to set __-remove-healthy-container__, by default use `false`
