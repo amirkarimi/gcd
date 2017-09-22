@@ -10,7 +10,6 @@ import (
 	"time"
 
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -35,29 +34,27 @@ func main() {
 		panic(err)
 	}
 
-	logger := logrus.New()
-	logger.Out = os.Stdout
-
 	s := make(chan os.Signal, 1)
 
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGINT)
 
-	logger.Infof("Docker Host: %v", dockerHost)
-	logger.Infof("Sweep Interval: %vs", sweepInterval)
-	logger.Infof("Remove Images: %v", removeImages)
-	logger.Infof("Remove Healthy Containers Exited: %v", removeHealthyContainersExited)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Time: %v)\n", time.Now().String())
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Docker Host: %v)\n", dockerHost)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Sweep Interval: %v)\n", sweepInterval)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Images: %v)\n", removeImages)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Healthy Containers Exited: %v)\n", removeHealthyContainersExited)
 
 	for {
 		select {
 		case <-s:
 			os.Exit(0)
 		case <-time.Tick(time.Duration(sweepInterval) * time.Second):
-			logger.Infof("Time: %v", time.Now().UnixNano())
+			fmt.Fprintf(os.Stdout, "\ngcd: [info]: (Time: %v)\n", time.Now().String())
 			containers, err := dc.ListContainers(docker.ListContainersOptions{
 				All: true,
 			})
 			if err != nil {
-				logger.Error(err)
+				fmt.Fprint(os.Stderr, err)
 			}
 			for _, container := range containers {
 				exitCodeFromContainer := "(-)"
@@ -66,15 +63,13 @@ func main() {
 				}
 				if container.State != "running" {
 					if (removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
-						err := dc.RemoveContainer(docker.RemoveContainerOptions{
+						fmt.Fprintf(os.Stdout, "gcd: [removing container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
+						if err := dc.RemoveContainer(docker.RemoveContainerOptions{
 							ID:            container.ID,
 							RemoveVolumes: true,
 							Force:         true,
-						})
-						if err != nil {
-							logger.Errorf("gcd: [Remove Container]: Error:%v", err)
-						} else {
-							logger.Infof("gcd: [Remove Container]: ID:%v, Labels:%v", container.ID, container.Labels)
+						}); err == nil {
+							fmt.Fprintf(os.Stdout, "gcd: [removed container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
 						}
 					}
 				}
@@ -83,18 +78,16 @@ func main() {
 			if removeImages {
 				images, err := dc.ListImages(docker.ListImagesOptions{})
 				if err != nil {
-					logger.Error(err)
+					fmt.Fprint(os.Stderr, err)
 				}
 				for _, image := range images {
-					err := dc.RemoveImage(image.ID)
-					if err != nil {
-						logger.Errorf("gcd: [Remove Image]: Error:%v", err)
-					} else {
-						logger.Infof("gcd: [Remove Image]: ID:%v, Labels", image.ID, image.Labels)
+					fmt.Fprintf(os.Stdout, "gcd: [removing image]: (Id: %v, Labels: %v)\n", image.ID, image.Labels)
+					if err := dc.RemoveImage(image.ID); err == nil {
+						fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Labels: %v)\n", image.ID, image.Labels)
 					}
+
 				}
 			}
 		}
-		fmt.Println()
 	}
 }
