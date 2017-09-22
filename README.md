@@ -46,7 +46,7 @@ docker.io/alpine         latest              7328f6f8b418        6 weeks ago    
 
 - __-target__ Set docker host target
 - __-sweep-interval__ Set interval between sweep
-- __-remove-images__ Set enable to remove any image
+- __-remove-images__ Set enable to remove images that isn't any container dependencies
 - __-remove-healthy-container__ Set enable to remove healthy container
 
 ## Docker environment configuration
