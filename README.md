@@ -22,7 +22,7 @@ This project is a garbage collector for docker images and container, it exists b
 
 ### Parameters
 
-- __-target__ Set docker host target
+- __-docker-host__ Set docker host target
 - __-sweep-interval__ Set interval between sweep, this parameter only measures in second
 - __-remove-images__ Set enable to remove images that isn't any container dependencies
 - __-remove-healthy-containers-exited__ Set enable to remove containers exited with code 0
