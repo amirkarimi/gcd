@@ -5,21 +5,31 @@
 ## Description
 This project is a garbage collector for docker images and container, it exists because today our machines contains very garbage from Docker components.
 
-## Install
+## Binary
+
+### Building binary
 
 ```bash
 > git clone https://github.com/stone-payments/gcd.git
 > make build
 ```
 
-## To use
-
 ### Running builded binary
 ```bash
 > ./bin/gcd
 ```
 
-### Use docker image with short command
+
+### Parameters
+
+- __-target__ Set docker host target
+- __-sweep-interval__ Set interval between sweep, this parameter only measures in second
+- __-remove-images__ Set enable to remove images that isn't any container dependencies
+- __-remove-healthy-container__ Set enable to remove healthy container
+
+## Docker
+
+### Use docker image from Docker Hub
 ```bash
 > docker run --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
 ```
@@ -42,14 +52,7 @@ docker.io/alpine         latest              7328f6f8b418        6 weeks ago    
 > docker run --name gcd -v /var/run/docker.sock:/var/run/docker.sock guiferpa/gcd
 ```
 
-## Flags
-
-- __-target__ Set docker host target
-- __-sweep-interval__ Set interval between sweep, this parameter only measures in second
-- __-remove-images__ Set enable to remove images that isn't any container dependencies
-- __-remove-healthy-container__ Set enable to remove healthy container
-
-## Docker environment configuration
+### Environment variables
 
 - __GCD_DOCKER_HOST:__ A env variable to set __-target__, by default use `/var/run/docker.sock:/var/run/docker.sock`
 - __GCD_SWEEP_INTERVAL:__ A env variable to set __-sweep-interval__, by default use 60 seconds
