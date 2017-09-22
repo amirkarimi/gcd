@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -56,37 +57,47 @@ func main() {
 			if err != nil {
 				fmt.Fprint(os.Stderr, err)
 			}
+			var wgContainers sync.WaitGroup
 			for _, container := range containers {
-				exitCodeFromContainer := "(-)"
-				if splitedStatus := strings.Split(container.Status, " "); len(splitedStatus) > 1 {
-					exitCodeFromContainer = splitedStatus[1]
-				}
-				if container.State != "running" {
-					if (removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
-						fmt.Fprintf(os.Stdout, "gcd: [removing container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
-						if err := dc.RemoveContainer(docker.RemoveContainerOptions{
-							ID:            container.ID,
-							RemoveVolumes: true,
-							Force:         true,
-						}); err == nil {
-							fmt.Fprintf(os.Stdout, "gcd: [removed container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
+				wgContainers.Add(1)
+				go func() {
+					defer wgContainers.Done()
+					exitCodeFromContainer := "(-)"
+					if splitedStatus := strings.Split(container.Status, " "); len(splitedStatus) > 1 {
+						exitCodeFromContainer = splitedStatus[1]
+					}
+					if container.State != "running" {
+						if (removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
+							fmt.Fprintf(os.Stdout, "gcd: [removing container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
+							if err := dc.RemoveContainer(docker.RemoveContainerOptions{
+								ID:            container.ID,
+								RemoveVolumes: true,
+								Force:         true,
+							}); err == nil {
+								fmt.Fprintf(os.Stdout, "gcd: [removed container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
+							}
 						}
 					}
-				}
+				}()
 			}
-
+			wgContainers.Wait()
 			if removeImages {
+				var wgImages sync.WaitGroup
 				images, err := dc.ListImages(docker.ListImagesOptions{})
 				if err != nil {
 					fmt.Fprint(os.Stderr, err)
 				}
 				for _, image := range images {
-					fmt.Fprintf(os.Stdout, "gcd: [removing image]: (Id: %v, Labels: %v)\n", image.ID, image.Labels)
-					if err := dc.RemoveImage(image.ID); err == nil {
-						fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Labels: %v)\n", image.ID, image.Labels)
-					}
-
+					wgImages.Add(1)
+					go func() {
+						defer wgImages.Done()
+						fmt.Fprintf(os.Stdout, "gcd: [removing image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
+						if err := dc.RemoveImage(image.ID); err == nil {
+							fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
+						}
+					}()
 				}
+				wgImages.Wait()
 			}
 		}
 	}
