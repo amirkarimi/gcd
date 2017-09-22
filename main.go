@@ -14,23 +14,23 @@ import (
 )
 
 var (
-	target                 string
-	sweepInterval          int
-	removeImages           bool
-	removeHealthyContainer bool
+	dockerHost                    string
+	sweepInterval                 int
+	removeImages                  bool
+	removeHealthyContainersExited bool
 )
 
 func init() {
-	flag.StringVar(&target, "target", "unix:///var/run/docker.sock", "-target=unix:///var/run/docker.sock")
+	flag.StringVar(&dockerHost, "docker-host", "unix:///var/run/docker.sock", "-docker-host=unix:///var/run/docker.sock")
 	flag.IntVar(&sweepInterval, "sweep-interval", 60, "-sweep-interval=60")
 	flag.BoolVar(&removeImages, "remove-images", true, "-remove-images=true")
-	flag.BoolVar(&removeHealthyContainer, "remove-healthy-container", true, "-remove-healthy-container=true")
+	flag.BoolVar(&removeHealthyContainersExited, "remove-healthy-containers-exited", true, "-remove-healthy-containers-exited=true")
 }
 
 func main() {
 	flag.Parse()
 
-	dc, err := docker.NewClient(target)
+	dc, err := docker.NewClient(dockerHost)
 	if err != nil {
 		panic(err)
 	}
@@ -42,10 +42,10 @@ func main() {
 
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGINT)
 
-	logger.Infof("Target: %v", target)
+	logger.Infof("Docker Host: %v", dockerHost)
 	logger.Infof("Sweep Interval: %vs", sweepInterval)
 	logger.Infof("Remove Images: %v", removeImages)
-	logger.Infof("Remove Healthy Containers: %v", removeHealthyContainer)
+	logger.Infof("Remove Healthy Containers Exited: %v", removeHealthyContainersExited)
 
 	for {
 		select {
@@ -65,7 +65,7 @@ func main() {
 					exitCodeFromContainer = splitedStatus[1]
 				}
 				if container.State != "running" {
-					if (removeHealthyContainer && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
+					if (removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
 						err := dc.RemoveContainer(docker.RemoveContainerOptions{
 							ID:            container.ID,
 							RemoveVolumes: true,
