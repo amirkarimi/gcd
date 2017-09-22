@@ -50,7 +50,7 @@ func main() {
 	for {
 		select {
 		case <-s:
-			logger.Fatalf("Down worker by signal: %v", <-s)
+			os.Exit(0)
 		case <-time.Tick(time.Duration(sweepInterval) * time.Second):
 			logger.Infof("Time: %v", time.Now().UnixNano())
 			containers, err := dc.ListContainers(docker.ListContainersOptions{
