@@ -21,7 +21,7 @@ ENV GCD_SWEEP_INTERVAL "60"
 ENV GCD_REMOVE_IMAGES "true"
 ENV GCD_REMOVE_HEALTHY_CONTAINERS_EXITED "true"
 
-CMD ./gcd -target=$GCD_DOCKER_HOST \ 
+CMD ./gcd -docker-host=$GCD_DOCKER_HOST \ 
           -sweep-interval=$GCD_SWEEP_INTERVAL \
           -remove-images=$GCD_REMOVE_IMAGES \
-          -remove-healthy-container=$GCD_REMOVE_HEALTHY_CONTAINERS_EXITED
+          -remove-healthy-containers-exited=$GCD_REMOVE_HEALTHY_CONTAINERS_EXITED
