@@ -54,7 +54,7 @@ docker.io/alpine         latest              7328f6f8b418        6 weeks ago    
 
 ### Environment variables
 
-- __GCD_DOCKER_HOST:__ A env variable to set __-target__, by default use `/var/run/docker.sock:/var/run/docker.sock`
+- __GCD_DOCKER_HOST:__ A env variable to set __-docker-host__, by default use `/var/run/docker.sock:/var/run/docker.sock`
 - __GCD_SWEEP_INTERVAL:__ A env variable to set __-sweep-interval__, by default use 60 seconds
 - __GCD_REMOVE_IMAGES__: A env variable to set __-remove-images__, by default use `true`
-- __GCD_REMOVE_HEALTHY_CONTAINERS_EXITED__: A env variable to set __-remove-healthy-container__, by default use `false`
+- __GCD_REMOVE_HEALTHY_CONTAINERS_EXITED__: A env variable to set __-remove-healthy-containers-exited__, by default use `false`
