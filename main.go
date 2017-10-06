@@ -68,12 +68,14 @@ func main() {
 					}
 					if container.State != "running" {
 						if (removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
-							fmt.Fprintf(os.Stdout, "gcd: [removing container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
+							fmt.Fprintf(os.Stdout, "gcd: [trying remove container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
 							if err := dc.RemoveContainer(docker.RemoveContainerOptions{
 								ID:            container.ID,
 								RemoveVolumes: true,
 								Force:         true,
-							}); err == nil {
+							}); err != nil {
+								fmt.Fprintf(os.Stderr, "gcd: [error]: (when try remove container, reason: %v)\n", err.Error())
+							} else {
 								fmt.Fprintf(os.Stdout, "gcd: [removed container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
 							}
 						}
@@ -92,7 +94,9 @@ func main() {
 					go func() {
 						defer wgImages.Done()
 						fmt.Fprintf(os.Stdout, "gcd: [trying remove image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
-						if err := dc.RemoveImage(image.ID); err == nil {
+						if err := dc.RemoveImage(image.ID); err != nil {
+							fmt.Fprintf(os.Stderr, "gcd: [error]: (when try remove image, reason: %v)\n", err.Error())
+						} else {
 							fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 						}
 					}()
