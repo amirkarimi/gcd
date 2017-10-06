@@ -12,7 +12,7 @@ PKGS := $(shell go list ./... | grep -v /vendor)
 
 .PHONY: test lint build clear
 
-build: clear $(RELEASE_PATH)
+build: test clear $(RELEASE_PATH)
 
 build-image:
 	@echo "---> Building the project using Dockerfile"
@@ -21,6 +21,10 @@ build-image:
 clear:
 	@echo "---> Cleaning up directory"
 	@rm -rf $(RELEASE_DIR)
+
+test:
+	@echo "---> Testing"
+	@go test
 
 $(RELEASE_PATH):
 	@echo "---> Building the project"
