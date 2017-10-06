@@ -41,7 +41,7 @@ func main() {
 
 	fmt.Fprintf(os.Stdout, "gcd: [info]: (Time: %v)\n", time.Now().String())
 	fmt.Fprintf(os.Stdout, "gcd: [info]: (Docker Host: %v)\n", dockerHost)
-	fmt.Fprintf(os.Stdout, "gcd: [info]: (Sweep Interval: %v)\n", sweepInterval)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Sweep Interval: %vs)\n", sweepInterval)
 	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Images: %v)\n", removeImages)
 	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Healthy Containers Exited: %v)\n", removeHealthyContainersExited)
 
@@ -91,7 +91,7 @@ func main() {
 					wgImages.Add(1)
 					go func() {
 						defer wgImages.Done()
-						fmt.Fprintf(os.Stdout, "gcd: [removing image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
+						fmt.Fprintf(os.Stdout, "gcd: [trying remove image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 						if err := dc.RemoveImage(image.ID); err == nil {
 							fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 						}
