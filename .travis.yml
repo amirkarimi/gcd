@@ -1,5 +1,13 @@
 laguage: go
 
+go:
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+  - 1.9
+  - master
+
 services:
   - docker
   
@@ -7,6 +15,9 @@ before_install:
   - mkdir -p $GOPATH/src/github.com/stone-payments/gcd
   - mv $TRAVIS_BUILD_DIR $GOPATH/src/github.com/stone-payments
   - cd $GOPATH/src/github.com/stone-payments/gcd
+
+install:
+  - go get github.com/mattn/goveralls
 
 script:
   - make
