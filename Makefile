@@ -30,7 +30,7 @@ $(RELEASE_PATH):
 
 lint: $(GOMETALINTER)
 	@echo "---> Running lint"
-	@gometalinter ../$(PROJECT)/... --vendor --disable=gocyclo
+	@gometalinter ../$(PROJECT)/... --vendor --disable=gocyclo --disable=gotype
 
 $(GOMETALINTER):
 	@echo "---> Installing gometalinter"
