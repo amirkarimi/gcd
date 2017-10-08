@@ -1,5 +1,7 @@
 package main
 
+// nolint[gocyclo]
+
 import (
 	"flag"
 	"fmt"
@@ -13,26 +15,26 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-type Options struct {
+type options struct {
 	dockerHost                    string
 	sweepInterval                 int
 	removeImages                  bool
 	removeHealthyContainersExited bool
 }
 
-var options Options
+var opts options
 
 func init() {
-	flag.StringVar(&options.dockerHost, "docker-host", "unix:///var/run/docker.sock", "-docker-host=unix:///var/run/docker.sock")
-	flag.IntVar(&options.sweepInterval, "sweep-interval", 60, "-sweep-interval=60")
-	flag.BoolVar(&options.removeImages, "remove-images", true, "-remove-images=true")
-	flag.BoolVar(&options.removeHealthyContainersExited, "remove-healthy-containers-exited", true, "-remove-healthy-containers-exited=true")
+	flag.StringVar(&opts.dockerHost, "docker-host", "unix:///var/run/docker.sock", "-docker-host=unix:///var/run/docker.sock")
+	flag.IntVar(&opts.sweepInterval, "sweep-interval", 60, "-sweep-interval=60")
+	flag.BoolVar(&opts.removeImages, "remove-images", true, "-remove-images=true")
+	flag.BoolVar(&opts.removeHealthyContainersExited, "remove-healthy-containers-exited", true, "-remove-healthy-containers-exited=true")
 }
 
 func main() {
 	flag.Parse()
 
-	dc, err := docker.NewClient(options.dockerHost)
+	dc, err := docker.NewClient(opts.dockerHost)
 	if err != nil {
 		panic(err)
 	}
@@ -42,22 +44,22 @@ func main() {
 	signal.Notify(s, syscall.SIGTERM, syscall.SIGINT)
 
 	fmt.Fprintf(os.Stdout, "gcd: [info]: (Time: %v)\n", time.Now().String())
-	fmt.Fprintf(os.Stdout, "gcd: [info]: (Docker Host: %v)\n", options.dockerHost)
-	fmt.Fprintf(os.Stdout, "gcd: [info]: (Sweep Interval: %vs)\n", options.sweepInterval)
-	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Images: %v)\n", options.removeImages)
-	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Healthy Containers Exited: %v)\n", options.removeHealthyContainersExited)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Docker Host: %v)\n", opts.dockerHost)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Sweep Interval: %vs)\n", opts.sweepInterval)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Images: %v)\n", opts.removeImages)
+	fmt.Fprintf(os.Stdout, "gcd: [info]: (Remove Healthy Containers Exited: %v)\n", opts.removeHealthyContainersExited)
 
 	for {
 		select {
 		case <-s:
 			os.Exit(0)
-		case <-time.Tick(time.Duration(options.sweepInterval) * time.Second):
-			Run(dc, options)
+		case <-time.Tick(time.Duration(opts.sweepInterval) * time.Second):
+			run(dc, opts)
 		}
 	}
 }
 
-func Run(dc *docker.Client, options Options) {
+func run(dc *docker.Client, opts options) {
 	fmt.Fprintf(os.Stdout, "\ngcd: [info]: (Time: %v)\n", time.Now().String())
 	containers, err := dc.ListContainers(docker.ListContainersOptions{
 		All: true,
@@ -68,14 +70,14 @@ func Run(dc *docker.Client, options Options) {
 	var wgContainers sync.WaitGroup
 	for _, container := range containers {
 		wgContainers.Add(1)
-		go func() {
+		go func(container docker.APIContainers) {
 			defer wgContainers.Done()
 			exitCodeFromContainer := "(-)"
 			if splitedStatus := strings.Split(container.Status, " "); len(splitedStatus) > 1 {
 				exitCodeFromContainer = splitedStatus[1]
 			}
 			if container.State != "running" {
-				if (options.removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
+				if (opts.removeHealthyContainersExited && exitCodeFromContainer == "(0)") || exitCodeFromContainer != "(0)" {
 					fmt.Fprintf(os.Stdout, "gcd: [trying remove container]: (Id: %v, Labels: %v)\n", container.ID, container.Labels)
 					if err := dc.RemoveContainer(docker.RemoveContainerOptions{
 						ID:            container.ID,
@@ -88,10 +90,10 @@ func Run(dc *docker.Client, options Options) {
 					}
 				}
 			}
-		}()
+		}(container)
 	}
 	wgContainers.Wait()
-	if options.removeImages {
+	if opts.removeImages {
 		var wgImages sync.WaitGroup
 		images, err := dc.ListImages(docker.ListImagesOptions{})
 		if err != nil {
@@ -99,7 +101,7 @@ func Run(dc *docker.Client, options Options) {
 		}
 		for _, image := range images {
 			wgImages.Add(1)
-			go func() {
+			go func(image docker.APIImages) {
 				defer wgImages.Done()
 				fmt.Fprintf(os.Stdout, "gcd: [trying remove image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 				if err := dc.RemoveImage(image.ID); err != nil {
@@ -107,7 +109,7 @@ func Run(dc *docker.Client, options Options) {
 				} else {
 					fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 				}
-			}()
+			}(image)
 		}
 		wgImages.Wait()
 	}

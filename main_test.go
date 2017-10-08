@@ -9,19 +9,23 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
+const dockerHost = "unix:///var/run/docker.sock"
+
 func TestRemoveHealthyContainersExited(t *testing.T) {
 	// Run a sample docker
 	runShell(t, "docker run --name hello-test hello-world")
 
-	dc, err := docker.NewClient(options.dockerHost)
+	opts = options{}
+
+	dc, err := docker.NewClient(dockerHost)
 	if err != nil {
 		t.Error(err)
 	}
 
-	Run(
+	run(
 		dc,
-		Options{
-			dockerHost:                    "unix:///var/run/docker.sock",
+		options{
+			dockerHost:                    dockerHost,
 			removeImages:                  false,
 			removeHealthyContainersExited: true,
 		},
@@ -35,14 +39,14 @@ func TestRemoveImages(t *testing.T) {
 	// Run a sample docker
 	runShell(t, "docker pull hello-world")
 
-	dc, err := docker.NewClient(options.dockerHost)
+	dc, err := docker.NewClient(dockerHost)
 	if err != nil {
 		t.Error(err)
 	}
 
-	Run(
+	run(
 		dc,
-		Options{
+		options{
 			dockerHost:                    "unix:///var/run/docker.sock",
 			removeImages:                  true,
 			removeHealthyContainersExited: false,
