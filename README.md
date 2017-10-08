@@ -1,6 +1,7 @@
 # gcd
 
 [![Build Status](https://travis-ci.org/stone-payments/gcd.svg?branch=master)](https://travis-ci.org/stone-payments/gcd)
+[![Go Report Card](https://goreportcard.com/badge/github.com/stone-payments/gcd)](https://goreportcard.com/report/github.com/stone-payments/gcd)
 
 ## Description
 This project is a garbage collector for docker images and container, it exists because today our machines contains a lot of garbage from Docker components.
