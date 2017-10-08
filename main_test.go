@@ -15,7 +15,7 @@ func TestRemoveHealthyContainersExited(t *testing.T) {
 		t.Error(err)
 	}
 
-	defer dc.RemoveImage("hello-world")
+	defer dc.RemoveImage("hello-world") // nolint: errcheck
 	err = dc.PullImage(docker.PullImageOptions{
 		Repository: "hello-world",
 		Tag:        "latest",
