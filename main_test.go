@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"os/exec"
-	"strings"
+	"context"
 	"testing"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -12,12 +10,26 @@ import (
 const dockerHost = "unix:///var/run/docker.sock"
 
 func TestRemoveHealthyContainersExited(t *testing.T) {
-	// Run a sample docker
-	runShell(t, "docker run --name hello-test hello-world")
-
-	opts = options{}
-
 	dc, err := docker.NewClient(dockerHost)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer dc.RemoveImage("hello-world")
+	err = dc.PullImage(docker.PullImageOptions{
+		Repository: "hello-world",
+		Tag:        "latest",
+	}, docker.AuthConfiguration{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Run a sample docker
+	container, err := dc.CreateContainer(docker.CreateContainerOptions{
+		Name:    "hello-test",
+		Config:  &docker.Config{Image: "hello-world"},
+		Context: context.Background(),
+	})
 	if err != nil {
 		t.Error(err)
 	}
@@ -32,14 +44,19 @@ func TestRemoveHealthyContainersExited(t *testing.T) {
 	)
 
 	// Check if the sample docker removed
-	assertContainerNotExists(t, dc, "hello-test")
+	assertContainerNotExists(t, dc, container)
 }
 
 func TestRemoveImages(t *testing.T) {
-	// Run a sample docker
-	runShell(t, "docker pull hello-world")
-
 	dc, err := docker.NewClient(dockerHost)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = dc.PullImage(docker.PullImageOptions{
+		Repository: "hello-world",
+		Tag:        "latest",
+	}, docker.AuthConfiguration{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -57,7 +74,7 @@ func TestRemoveImages(t *testing.T) {
 	assertImageNotExists(t, dc, "hello-world")
 }
 
-func assertContainerNotExists(t *testing.T, dc *docker.Client, name string) {
+func assertContainerNotExists(t *testing.T, dc *docker.Client, container *docker.Container) {
 	containers, err := dc.ListContainers(docker.ListContainersOptions{
 		All: true,
 	})
@@ -65,8 +82,8 @@ func assertContainerNotExists(t *testing.T, dc *docker.Client, name string) {
 		t.Error(err)
 	}
 	for _, c := range containers {
-		if c.Names[0] == "hello-test" {
-			t.Errorf("Container %s exists which shouldn't.", name)
+		if c.ID == container.ID {
+			t.Errorf("Container %s exists which shouldn't.", container.Name)
 			return
 		}
 	}
@@ -86,15 +103,4 @@ func assertImageNotExists(t *testing.T, dc *docker.Client, tag string) {
 			}
 		}
 	}
-}
-
-func runShell(t *testing.T, cmdFull string) string {
-	fullParams := strings.Split(cmdFull, " ")
-	cmd := fullParams[0]
-	params := fullParams[1:]
-	stdout, err := exec.Command(cmd, params...).Output()
-	if err != nil {
-		t.Error(err)
-	}
-	return fmt.Sprintf("%s", stdout)
 }
