@@ -1,5 +1,7 @@
 package main
 
+// nolint[gocyclo]
+
 import (
 	"flag"
 	"fmt"
@@ -60,7 +62,7 @@ func main() {
 			var wgContainers sync.WaitGroup
 			for _, container := range containers {
 				wgContainers.Add(1)
-				go func() {
+				go func(container docker.APIContainers) {
 					defer wgContainers.Done()
 					exitCodeFromContainer := "(-)"
 					if splitedStatus := strings.Split(container.Status, " "); len(splitedStatus) > 1 {
@@ -80,7 +82,7 @@ func main() {
 							}
 						}
 					}
-				}()
+				}(container)
 			}
 			wgContainers.Wait()
 			if removeImages {
@@ -91,7 +93,7 @@ func main() {
 				}
 				for _, image := range images {
 					wgImages.Add(1)
-					go func() {
+					go func(image docker.APIImages) {
 						defer wgImages.Done()
 						fmt.Fprintf(os.Stdout, "gcd: [trying remove image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 						if err := dc.RemoveImage(image.ID); err != nil {
@@ -99,7 +101,7 @@ func main() {
 						} else {
 							fmt.Fprintf(os.Stdout, "gcd: [removed image]: (Id: %v, Tags: %v)\n", image.ID, image.RepoTags)
 						}
-					}()
+					}(image)
 				}
 				wgImages.Wait()
 			}
